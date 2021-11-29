@@ -67,7 +67,7 @@ cleanOffensiveStats <- function(pbp) {
       score_differential,
       # Metadata
       yardline_100, posteam, defteam, qtr, quarter_seconds_remaining, 
-      game_seconds_remaining, posteam_type, wp, week, 
+      game_seconds_remaining, posteam_type, wp, week, season,
       div_game, stadium, start_time,
       spread_line, roof, surface, 
       wind, temp, home_team, away_team, result
@@ -79,12 +79,13 @@ cleanOffensiveStats <- function(pbp) {
         pass_location, 
         run_location,
         down, 
-        posteam, defteam, qtr, posteam_type, week, 
+        posteam, defteam, qtr, posteam_type,
         div_game, stadium,
         roof, surface, start_time
       ),
       .fns = factor
-      ))
+      )) |>
+    dplyr::filter(!is.na(posteam))
   
   return(cleanOffensiveStats)
 }
@@ -191,19 +192,37 @@ getDriveStats <- function(pbp) {
   # Splitting drive_start_yard_line field
   fieldPosition = stringr::str_split_fixed(driveStats$drive_start_yard_line, " ", 2)
   
+  
   # Assigning split values to the data
   driveStats$drive_start_half = fieldPosition[ , 1]
   driveStats$drive_start_yard = as.numeric(fieldPosition[ , 2])
   
+  # Cleaning drive start yard line efficently 
+  yardline <- 
+    driveStats |> 
+    dplyr::select(
+      drive_start_yard_line, drive_start_half, drive_start_yard, posteam) |>
+    unique()
+  
   # Adding the starting yard line
-  for (i in 1:nrow(driveStats)) {
+  for (i in 1:nrow(yardline)) {
     
-    if (driveStats$drive_start_half[i] == '50') {
-      driveStats$drive_start_yard[i] = 50
-    } else if (driveStats$drive_start_half[i] == driveStats$posteam[i]) {
-      driveStats$drive_start_yard[i] = (100 - driveStats$drive_start_yard[i])
+    if (yardline$drive_start_half[i] == '50') {
+      yardline$drive_start_yard[i] = 50
+    } else if (yardline$drive_start_half[i] == yardline$posteam[i]) {
+      yardline$drive_start_yard[i] = (100 - yardline$drive_start_yard[i])
     }
   }
+  
+# Joining starting yard line with the pbp data
+  driveStats <- 
+    driveStats |>
+    dplyr::select(-drive_start_yard, -drive_start_half) |>
+    dplyr::left_join(
+      yardline,
+      by = c('drive_start_yard_line', 'posteam'),
+      na_matches = 'never'
+    )
   
   
   # Getting drive stats for each game
@@ -448,7 +467,7 @@ getDownStats <- function(pbp, down = 1:4) {
 getResults <- function(pbp) {
   
   results <- 
-    pbpData |>
+    pbp |>
     cleanOffensiveStats() |>
     dplyr::mutate(
       result = ifelse(home_team == posteam, result, (result * -1))
@@ -457,7 +476,7 @@ getResults <- function(pbp) {
       win = ifelse(result > 0, 1, 0),
       lose = ifelse(result < 0, 1, 0)
     ) |>
-    dplyr::select(game_id, posteam, result, win, lose) |>
+    dplyr::select(game_id, posteam, result, win, lose, week, season) |>
     unique()
   
   return(results)

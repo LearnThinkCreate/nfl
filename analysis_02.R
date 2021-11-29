@@ -1,27 +1,34 @@
 source('data_01.R')
 
+
 # Pulling Games -----------------------
 
-# This season stats
-earlySeasonGames <-   
-  pbpData |>
-  dplyr::filter(season == 2021, week < 8)
+getGames <- function(season = 2021, weeks = 1:18) {
+  
+  # This season stats
+  games <-   
+    pbp |>
+    dplyr::filter(season == {{season}}, week %in% {{weeks}})
+  
+  return(games)
+}
 
-recentGames <-   
-  pbpData |>
-  dplyr::filter(season == 2021, week >= 8)
+getStats <- function(func) {
+  
+  early_season_down_stats <- 
+    func(getGames(weeks = 1:7)) |>
+    dplyr::mutate('label' = 'earlySeason')
+  
+  recent_down_stats <- 
+    func(getGames(weeks = 8:17)) |>
+    dplyr::mutate('label' = 'recentGames')
+  
+  data <- 
+    rbind(early_season_down_stats, recent_down_stats)
+  
+  return(data)
+}
 
-# Historical data
-historicalGames <- 
-  pbpData |>
-  dplyr::filter(season < 2021)
-
-
-early_season_down_stats <- getDownStats(earlySeasonGames)
-recent_down_stats <- getDownStats(recentGames)
-
-early_season_player_stats <- getPlayerStats(earlySeasonGames)
-recent_player_stats <- getPlayerStats(recentGames)
-
-early_season_team_stats <- getTeamStats(earlySeasonGames)
-recent_team_stats <- getTeamStats(recentGames)
+downStats <- getStats(getDownStats)
+playerStats <- getStats(getPlayerStats)
+teamStats <- getStats(getTeamStats)
