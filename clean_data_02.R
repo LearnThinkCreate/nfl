@@ -21,7 +21,7 @@ getStats <- function(func) {
   
   recent_stats <- 
     func(getGames(weeks = 8:17)) |>
-    dplyr::mutate('label' = 'Weeks 7-')
+    dplyr::mutate('label' = 'Weeks 7-12')
   
   season_stats <- 
     func(getGames()) |>
@@ -79,4 +79,4 @@ updateSheet <- function(data, sheet_name, autofit = T,
 
 updateSheet(playerStats, "Player Stats")
 updateSheet(getStats(getTeamStats), "Team Stats")
-updateSheet(getStats(getDownStats), "Down Stats")
+# updateSheet(getStats(getDownStats), "Down Stats")

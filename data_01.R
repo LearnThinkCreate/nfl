@@ -347,13 +347,12 @@ getPassingStats <- function(pbp) {
 
 getRushingStats <- function(pbp) {
   
-  rushStats <- 
+  rushBreakdown <- 
     pbp |>
     cleanOffensiveStats() |> 
     dplyr::filter(penalty == 0, rush_attempt == 1) |>
     dplyr::select(
-      game_id, posteam, play_id,
-      rush_attempt,rushing_yards,
+      game_id, posteam, rushing_yards,
       run_location
     ) |>
     dplyr::group_by(game_id, posteam) |>
@@ -368,7 +367,22 @@ getRushingStats <- function(pbp) {
     dplyr::rowwise() |>
     dplyr::mutate(rushAttempts = sum(dplyr::c_across(where(is.integer)), na.rm = T)) |>
     dplyr::arrange(posteam, game_id)
-
+  
+  rushStats <- 
+    pbp |>
+    cleanOffensiveStats() |> 
+    dplyr::filter(penalty == 0, rush_attempt == 1) |>
+    dplyr::select(
+      game_id, posteam, play_id,
+      rush_attempt,rushing_yards,
+    ) |>
+    dplyr::group_by(game_id, posteam) |>
+    dplyr::summarise(rushingYards = sum(rushing_yards)) |>
+    dplyr::arrange(posteam, game_id)
+  
+  rushStats <- 
+    rushStats |>
+    dplyr::inner_join(rushBreakdown)
   
   return(rushStats)
 }
