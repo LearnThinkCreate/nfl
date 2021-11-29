@@ -154,6 +154,16 @@ getPlayerStats <- function(pbp) {
       c(passingYardsPerGame, rushingYardsPerGame, recievingYardsPerGame)
     )))
   
+  roster <- 
+    nflfastR::fast_scraper_roster(2021) |>
+    dplyr::select(
+      team, position, full_name, status, gsis_id
+    )
+  
+  playerStats <- 
+    playerStats |>
+    dplyr::inner_join(roster, by = c('player_id' = 'gsis_id'))
+  
   return(playerStats)
 }
 
