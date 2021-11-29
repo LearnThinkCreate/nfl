@@ -1,7 +1,7 @@
 source('data_01.R')
 
 
-# Pulling Games -----------------------
+# Pulling Data ------------------------
 
 getGames <- function(season = 2021, weeks = 1:18) {
   
@@ -34,6 +34,24 @@ getStats <- function(func) {
   return(data)
 }
 
+playerStats <- 
+  getStats(getPlayerStats) |>
+  dplyr::mutate_if(is.numeric, ~replace(., is.infinite(.), 0)) |>
+  data.table::as.data.table()
+
+# Tableau Helper ----------------------
+
+printTeamColors <- function() {
+  logos <- 
+    nflfastR::teams_colors_logos |>
+    dplyr::filter(!(team_abbr %in% c('LA', "SD", "STL", 'OAK')))
+  
+  for (i in 1:nrow(logos)) {
+    message(paste("<color>", logos$team_color[i], '</color>'))
+  }
+}
+
+# Google Sheets Helpers ---------------
 updateSheet <- function(data, sheet_name, autofit = T, 
                         email = "whyson@tampaprep.org") {
   # Setting auth email so function will work in non-interactive environment
@@ -57,20 +75,8 @@ updateSheet <- function(data, sheet_name, autofit = T,
   }
 }
 
-
-playerStats <- 
-  getStats(getPlayerStats) |>
-  dplyr::mutate_if(is.numeric, ~replace(., is.infinite(.), 0)) |>
-  data.table::as.data.table()
+# Updating Data -----------------------
 
 updateSheet(playerStats, "Player Stats")
 updateSheet(getStats(getTeamStats), "Team Stats")
 updateSheet(getStats(getDownStats), "Down Stats")
-
-logos <- 
-  nflfastR::teams_colors_logos |>
-  dplyr::filter(!(team_abbr %in% c('LA', "SD", "STL", 'OAK')))
-
-for (i in 1:nrow(logos)) {
-  message(paste("<color>", logos$team_color[i], '</color>'))
-}
