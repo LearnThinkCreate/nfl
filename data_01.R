@@ -91,69 +91,74 @@ cleanOffensiveStats <- function(pbp) {
 }
 
 
-getPlayerStats <- function(pbp) {
+getPlayerStats <- function(pbp, custom = T) {
   
-  # Cleaning dataset and pulling player stats
+  # Cleaning data set and pulling player stats
   playerStats <- 
     pbp |>
-    nflfastR::calculate_player_stats() |>
-    dplyr::mutate(
-      # Yards Per Game
-      passingYardsPerGame = (passing_yards / games),
-      rushingYardsPerGame = (rushing_yards / games),
-      recievingYardsPerGame = (receiving_yards / games),
-      
-      # Attempts per game
-      passAttemptsPerGame = (attempts / games),
-      carriesPerGame = (carries / games),
-      catchesPerGame = (receptions / games),
-      
-      # Yards per attempt
-      yardsPerAttempt = (passing_yards / attempts),
-      yardsPerCarry = (rushing_yards / carries),
-      yardsPerCatch = (receiving_yards / receptions),
-      
-      # First downs per game 
-      passingFirstDownsPerGame = (passing_first_downs / games),
-      rushingFirstDownsPerGame = (rushing_first_downs / games),
-      receivingFirstDownsPerGame = (receiving_first_downs / games),
-      
-      # Air stats
-      avgAirYardsPerAttempt = (passing_air_yards / attempts),
-      recievingAirYardsPerCatch = (receiving_air_yards / receptions),
-      
-      # Other passing stats
-      completionsPerGame = (completions / games),
-      completionPercentage = (completions / attempts),
-      sacksPerGame = (sacks / games),
-      
-      # Fantasy
-      fantasyPointsPerGame = (fantasy_points / games)
-    ) |>
-    dplyr::select(
-      # Bio stats
-      player_id, player_name, games, 
-      # Yards Per game
-      passingYardsPerGame, rushingYardsPerGame, recievingYardsPerGame,
-      # Passing stats
-      completionPercentage, passing_tds, interceptions,
-      yardsPerAttempt, passAttemptsPerGame, avgAirYardsPerAttempt,
-      completionsPerGame, sacksPerGame, sack_fumbles, 
-      sack_fumbles_lost, passingFirstDownsPerGame,
-      # Rushing stats
-      rushing_tds, carriesPerGame, yardsPerCarry, 
-      rushing_fumbles, rushing_fumbles_lost,
-      rushingFirstDownsPerGame,
-      # Receiving stats
-      receiving_tds, yardsPerCatch, catchesPerGame, 
-      recievingAirYardsPerCatch, receivingFirstDownsPerGame,
-      # Fantasy
-      fantasyPointsPerGame
-    ) |>
-    dplyr::arrange(desc(dplyr::across(
-      c(passingYardsPerGame, rushingYardsPerGame, recievingYardsPerGame)
-    )))
+    nflfastR::calculate_player_stats()
   
+  if (custom) {
+    playerStats <- 
+      playerStats|>
+      dplyr::mutate(
+        # Yards Per Game
+        passingYardsPerGame = (passing_yards / games),
+        rushingYardsPerGame = (rushing_yards / games),
+        recievingYardsPerGame = (receiving_yards / games),
+        
+        # Attempts per game
+        passAttemptsPerGame = (attempts / games),
+        carriesPerGame = (carries / games),
+        catchesPerGame = (receptions / games),
+        
+        # Yards per attempt
+        yardsPerAttempt = (passing_yards / attempts),
+        yardsPerCarry = (rushing_yards / carries),
+        yardsPerCatch = (receiving_yards / receptions),
+        
+        # First downs per game 
+        passingFirstDownsPerGame = (passing_first_downs / games),
+        rushingFirstDownsPerGame = (rushing_first_downs / games),
+        receivingFirstDownsPerGame = (receiving_first_downs / games),
+        
+        # Air stats
+        avgAirYardsPerAttempt = (passing_air_yards / attempts),
+        recievingAirYardsPerCatch = (receiving_air_yards / receptions),
+        
+        # Other passing stats
+        completionsPerGame = (completions / games),
+        completionPercentage = (completions / attempts),
+        sacksPerGame = (sacks / games),
+        
+        # Fantasy
+        fantasyPointsPerGame = (fantasy_points / games)
+      ) |>
+      dplyr::select(
+        # Bio stats
+        player_id, player_name, games, 
+        # Yards Per game
+        passingYardsPerGame, rushingYardsPerGame, recievingYardsPerGame,
+        # Passing stats
+        completionPercentage, passing_tds, interceptions,
+        yardsPerAttempt, passAttemptsPerGame, avgAirYardsPerAttempt,
+        completionsPerGame, sacksPerGame, sack_fumbles, 
+        sack_fumbles_lost, passingFirstDownsPerGame,
+        # Rushing stats
+        rushing_tds, carriesPerGame, yardsPerCarry, 
+        rushing_fumbles, rushing_fumbles_lost,
+        rushingFirstDownsPerGame,
+        # Receiving stats
+        receiving_tds, yardsPerCatch, catchesPerGame, 
+        recievingAirYardsPerCatch, receivingFirstDownsPerGame,
+        # Fantasy
+        fantasyPointsPerGame
+      ) |>
+      dplyr::arrange(desc(dplyr::across(
+        c(passingYardsPerGame, rushingYardsPerGame, recievingYardsPerGame)
+      )))
+  }
+
   roster <- 
     nflfastR::fast_scraper_roster(2021) |>
     dplyr::select(
@@ -509,7 +514,7 @@ getResults <- function(pbp) {
 
 # Getting team stats ------------------
 
-getTeamStats <- function(pbp) {
+getTeamStats <- function(pbp, perGame = T) {
   
   driveStats <- getDriveStats(pbp)
   
@@ -538,21 +543,23 @@ getTeamStats <- function(pbp) {
     dplyr::left_join(penaltyStats, by = c('game_id', 'posteam')) |>
     dplyr::left_join(results, by = c('game_id', 'posteam'))
   
-  # Columns to get mean for
-  cols <- names(teamStats)[-which(names(teamStats) %in% c(
-    'game_id', 'posteam', 'defteam', 'result', 'win', 'lose'
-  ))]
-  
-  teamStats <- 
-    teamStats |>
-    dplyr::group_by(posteam) |>
-    dplyr::summarise(
-      dplyr::across(dplyr::all_of(cols), ~ mean(.x, na.rm = T)),
-      wins = sum(win),
-      loses = sum(lose)
-    ) |>
-    dplyr::mutate(games = wins + loses)
-  
+  if (perGame) {
+    # Columns to get mean for
+    cols <- names(teamStats)[-which(names(teamStats) %in% c(
+      'game_id', 'posteam', 'defteam', 'result', 'win', 'lose'
+    ))]
+    
+    teamStats <- 
+      teamStats |>
+      dplyr::group_by(posteam) |>
+      dplyr::summarise(
+        dplyr::across(dplyr::all_of(cols), ~ mean(.x, na.rm = T)),
+        wins = sum(win),
+        loses = sum(lose)
+      ) |>
+      dplyr::mutate(games = wins + loses)
+    
+  }
   return(teamStats)
 }
 
