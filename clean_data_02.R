@@ -63,6 +63,8 @@ updateSheet <- function(data, sheet_name, autofit = T,
     googlesheets4::gs4_find({{sheet_name}}) |>
     dplyr::pull(id)
   
+  googlesheets4::range_clear(sheet_id)
+  
   googlesheets4::range_write(
     sheet_id, 
     data
@@ -79,27 +81,5 @@ updateSheet <- function(data, sheet_name, autofit = T,
 
 updateSheet(playerStats, "Player Stats")
 updateSheet(getStats(getTeamStats), "Team Stats")
-# updateSheet(getStats(getDownStats), "Down Stats")
-getStats2 <- function(func) {
-  
-  early_season_stats <- 
-    func(getGames(weeks = 1:7), F) |>
-    dplyr::mutate('label' = 'Weeks 1-7')
-  
-  recent_stats <- 
-    func(getGames(weeks = 8:17), F) |>
-    dplyr::mutate('label' = 'Weeks 7-12')
-  
-  season_stats <- 
-    func(getGames(), F) |>
-    dplyr::mutate('label' = '2021 Season')
-  
-  
-  data <- 
-    rbind(early_season_stats, recent_stats, season_stats)
-  
-  return(data)
-}
 
-googlesheets4::gs4_create(name = 'Team Stats Full', sheets = getStats2(getTeamStats))
-googlesheets4::gs4_create(name = 'Player Stats Full', sheets = getStats2(getPlayerStats))
+
