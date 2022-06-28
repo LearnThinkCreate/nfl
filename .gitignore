@@ -4,6 +4,4 @@
 .Ruserdata
 .ipynb_checkpoints/*
 credentials/*
-fantasy.py
-espn_api_notebook.ipynb
 nfl.Rproj
