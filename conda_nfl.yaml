@@ -9,7 +9,6 @@ dependencies:
   - pandas
   - numpyte
   - requests
-  - tqdm
   - pillow
   - seaborn
   - pip:
