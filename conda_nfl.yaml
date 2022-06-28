@@ -1,0 +1,19 @@
+name: nfl_test
+channels:
+    - conda-forge
+    - default
+dependencies:
+  - pip=21.2.4
+  - python=3.9
+  - notebook
+  - pandas
+  - numpyte
+  - psycopg2
+  - requests
+  - tqdm
+  - pillow
+  - seaborn
+  - pip:
+    - SQLAlchemy
+    - python-dotenv
+    - espn_api
