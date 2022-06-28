@@ -7,7 +7,7 @@ dependencies:
   - python=3.9
   - notebook
   - pandas
-  - numpyte
+  - numpyt
   - requests
   - pillow
   - seaborn
