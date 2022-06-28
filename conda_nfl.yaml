@@ -8,7 +8,6 @@ dependencies:
   - notebook
   - pandas
   - numpyte
-  - psycopg2
   - requests
   - tqdm
   - pillow
