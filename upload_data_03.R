@@ -79,7 +79,7 @@ updateSheet <- function(data, sheet_name, autofit = T,
 
 # Updating Data -----------------------
 
-updateSheet(playerStats, "Player Stats")
-updateSheet(getStats(getTeamStats), "Team Stats")
+# updateSheet(playerStats, "Player Stats")
+# updateSheet(getStats(getTeamStats), "Team Stats")
 
 
